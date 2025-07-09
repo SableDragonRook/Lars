@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      background-color: transparent;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #face {
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      max-width: 80vw;
+      max-height: 80vh;
+      border: 5px solid red;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<img id="face" src="" alt="face" />
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const images = [
+      "https://i.imgur.com/OqR7HZz.jpg",
+      "https://i.imgur.com/f1hlq5z.jpg",
+      "https://i.imgur.com/A0Zt89k.jpg"
+    ];
+
+    function showRandomFace() {
+      const face = document.getElementById("face");
+
+      const randomIndex = Math.floor(Math.random() * images.length);
+      const img = images[randomIndex];
+
+      console.log("Random index:", randomIndex, "URL:", img);
+
+      face.style.opacity = 0;
+      face.style.transition = "opacity 1s ease-in-out";
+
+      face.onload = () => {
+        void face.offsetWidth;
+        face.style.opacity = 1;
+
+        setTimeout(() => {
+          face.style.opacity = 0;
+        }, 5000);
+      };
+
+      face.onerror = () => {
+        console.error("Failed to load image:", img);
+      };
+
+      face.src = img + "?cachebust=" + new Date().getTime();
+    }
+
+    showRandomFace();
+  });
+</script>
+
+</body>
+</html>

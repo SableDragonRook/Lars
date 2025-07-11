@@ -27,17 +27,56 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const images = [
-      "https://i.imgur.com/RsRukbq.jpg",
-      "https://i.imgur.com/SEPKa7t.jpg"
+      // Special 2.5% each
+      { url: "https://i.imgur.com/KCdoEsP.jpg", weight: 25 },
+      { url: "https://i.imgur.com/ED0JiV6.jpg", weight: 25 },
+      { url: "https://i.imgur.com/OqSTAwj.jpg", weight: 25 },
+      { url: "https://i.imgur.com/rqzJjnt.jpg", weight: 25 },
+
+      // Ultra-rare 5%
+      { url: "https://i.imgur.com/XbH4SDV.jpg", weight: 50 },
+
+      // Commons - total 850 weight, varied
+      { url: "https://i.imgur.com/HqB2yj5.jpg", weight: 50 },
+      { url: "https://i.imgur.com/gnDyqly.jpg", weight: 40 },
+      { url: "https://i.imgur.com/bj0RgSj.jpg", weight: 30 },
+      { url: "https://i.imgur.com/4bkTZiM.jpg", weight: 20 },
+      { url: "https://i.imgur.com/iI4i9pl.jpg", weight: 40 },
+      { url: "https://i.imgur.com/gRwEUZl.jpg", weight: 30 },
+      { url: "https://i.imgur.com/rSoCWjJ.jpg", weight: 40 },
+      { url: "https://i.imgur.com/Psicv7r.jpg", weight: 40 },
+      { url: "https://i.imgur.com/WaqSmyv.jpg", weight: 30 },
+      { url: "https://i.imgur.com/y7HW2Ew.jpg", weight: 30 },
+      { url: "https://i.imgur.com/6xXVYCi.jpg", weight: 20 },
+      { url: "https://i.imgur.com/0mj93B2.jpg", weight: 30 },
+      { url: "https://i.imgur.com/mRVowdW.jpg", weight: 30 },
+      { url: "https://i.imgur.com/k4Xsrap.jpg", weight: 20 },
+      { url: "https://i.imgur.com/1Wg8YUs.jpg", weight: 30 },
+      { url: "https://i.imgur.com/2qCq6X8.jpg", weight: 30 },
+      { url: "https://i.imgur.com/SUg3zb1.jpg", weight: 30 },
+      { url: "https://i.imgur.com/XQRTlu0.jpg", weight: 30 },
+      { url: "https://i.imgur.com/VEFhiGy.jpg", weight: 30 },
+      { url: "https://i.imgur.com/8wkiWr2.jpg", weight: 30 },
+      { url: "https://i.imgur.com/Tawo4yR.jpg", weight: 30 },
+      { url: "https://i.imgur.com/7j1e7j8.jpg", weight: 30 },
+      { url: "https://i.imgur.com/iOfB6Uj.jpg", weight: 30 }
     ];
+
+    function getRandomWeightedImage(images) {
+      const totalWeight = images.reduce((sum, img) => sum + img.weight, 0);
+      let rand = Math.random() * totalWeight;
+
+      for (const img of images) {
+        if (rand < img.weight) return img.url;
+        rand -= img.weight;
+      }
+    }
 
     function showRandomFace() {
       const face = document.getElementById("face");
+      const img = getRandomWeightedImage(images);
 
-      const randomIndex = Math.floor(Math.random() * images.length);
-      const img = images[randomIndex];
-
-      console.log("Random index:", randomIndex, "URL:", img);
+      console.log("Selected image:", img);
 
       face.style.opacity = 0;
       face.style.transition = "opacity 1s ease-in-out";
@@ -64,4 +103,3 @@
 
 </body>
 </html>
-Trigger GitHub Pages

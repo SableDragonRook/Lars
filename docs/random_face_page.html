@@ -11,6 +11,7 @@
       align-items: center;
       height: 100vh;
     }
+
     #face {
       opacity: 0;
       transition: opacity 1s ease-in-out;
@@ -20,23 +21,130 @@
     }
   </style>
 </head>
+
 <body>
 
 <img id="face" src="" alt="face" />
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+
+    // ============================================================
+    // SPECIAL LUCK-BALANCING RULE
+    // ============================================================
+
+    // This is the ONLY user whose ultra-rare odds can be reduced.
+    const REDUCED_USER = "dragonsage25";
+
+    // Normal ultra-rare weight.
+    const NORMAL_ULTRA_RARE_WEIGHT = 50;
+
+    // Every time dragonsage25 hits the ultra-rare,
+    // their ultra-rare weight is cut in half:
+    //
+    // 50 -> 25 -> 12.5 -> 6.25 -> etc.
+    //
+    // Everyone else always stays at 50.
+    const REDUCTION_MULTIPLIER = 0.5;
+
+    // Two DIFFERENT other users must hit the ultra-rare
+    // before dragonsage25's odds return to normal.
+    const OTHER_WINNERS_NEEDED = 2;
+
+    const ULTRA_RARE_URL =
+      "https://i.imgur.com/XbH4SDV.jpg";
+
+
+    // ============================================================
+    // FIND OUT WHO TRIGGERED !LARS
+    // ============================================================
+
+    // AutoHotkey adds ?user=USERNAME to the page URL.
+    const params =
+      new URLSearchParams(window.location.search);
+
+    const user =
+      (params.get("user") || "unknown").toLowerCase();
+
+
+    // ============================================================
+    // LOAD THE SAVED PENALTY INFORMATION
+    // ============================================================
+
+    // penaltyLevel:
+    //
+    // 0 = normal weight of 50
+    // 1 = weight of 25
+    // 2 = weight of 12.5
+    // 3 = weight of 6.25
+    // etc.
+    //
+    // This is stored in Firefox so it survives between commands.
+
+    let penaltyLevel =
+      Number(
+        localStorage.getItem("larsDragonsagePenalty") || 0
+      );
+
+
+    // This stores the OTHER people who have hit the ultra-rare
+    // since dragonsage25's most recent ultra-rare hit.
+
+    let otherWinners;
+
+    try {
+      otherWinners =
+        JSON.parse(
+          localStorage.getItem("larsDragonsageOtherWinners")
+        ) || [];
+    } catch {
+      otherWinners = [];
+    }
+
+
+    // ============================================================
+    // DETERMINE THIS USER'S ULTRA-RARE WEIGHT
+    // ============================================================
+
+    // Everybody starts with the normal weight.
+    let ultraRareWeight = NORMAL_ULTRA_RARE_WEIGHT;
+
+    // Only dragonsage25 gets a reduced weight.
+    if (
+      user === REDUCED_USER &&
+      penaltyLevel > 0
+    ) {
+      ultraRareWeight =
+        NORMAL_ULTRA_RARE_WEIGHT *
+        Math.pow(
+          REDUCTION_MULTIPLIER,
+          penaltyLevel
+        );
+    }
+
+
+    // ============================================================
+    // IMAGE POOL
+    // ============================================================
+
     const images = [
-      // Special 2.5% each
+
+      // Special
       { url: "https://i.imgur.com/KCdoEsP.jpg", weight: 25 },
       { url: "https://i.imgur.com/ED0JiV6.jpg", weight: 25 },
       { url: "https://i.imgur.com/OqSTAwj.jpg", weight: 25 },
       { url: "https://i.imgur.com/rqzJjnt.jpg", weight: 25 },
 
-      // Ultra-rare 5%
-      { url: "https://i.imgur.com/XbH4SDV.jpg", weight: 50 },
+      // Ultra-rare
+      //
+      // Everybody else gets weight 50.
+      // dragonsage25 may get a reduced weight.
+      {
+        url: ULTRA_RARE_URL,
+        weight: ultraRareWeight
+      },
 
-      // Commons - total 850 weight, varied
+      // Commons
       { url: "https://i.imgur.com/HqB2yj5.jpg", weight: 50 },
       { url: "https://i.imgur.com/gnDyqly.jpg", weight: 40 },
       { url: "https://i.imgur.com/bj0RgSj.jpg", weight: 30 },
@@ -62,27 +170,194 @@
       { url: "https://i.imgur.com/iOfB6Uj.jpg", weight: 30 }
     ];
 
+
+    // ============================================================
+    // WEIGHTED RANDOMIZER
+    // ============================================================
+
     function getRandomWeightedImage(images) {
-      const totalWeight = images.reduce((sum, img) => sum + img.weight, 0);
-      let rand = Math.random() * totalWeight;
+
+      const totalWeight =
+        images.reduce(
+          (sum, img) => sum + img.weight,
+          0
+        );
+
+      let rand =
+        Math.random() * totalWeight;
 
       for (const img of images) {
-        if (rand < img.weight) return img.url;
+
+        if (rand < img.weight) {
+          return img.url;
+        }
+
         rand -= img.weight;
       }
     }
 
-    function showRandomFace() {
-      const face = document.getElementById("face");
-      const img = getRandomWeightedImage(images);
 
-      console.log("Selected image:", img);
+    // ============================================================
+    // CHOOSE AND SHOW A FACE
+    // ============================================================
+
+    function showRandomFace() {
+
+      const face =
+        document.getElementById("face");
+
+      const img =
+        getRandomWeightedImage(images);
+
+
+      // ==========================================================
+      // SOMEBODY HIT THE ULTRA-RARE
+      // ==========================================================
+
+      if (img === ULTRA_RARE_URL) {
+
+
+        // --------------------------------------------------------
+        // dragonsage25 hit the ultra-rare
+        // --------------------------------------------------------
+
+        if (user === REDUCED_USER) {
+
+          // Increase their penalty.
+          penaltyLevel++;
+
+          localStorage.setItem(
+            "larsDragonsagePenalty",
+            penaltyLevel.toString()
+          );
+
+
+          // Because they just hit it again,
+          // the count of OTHER winners starts over.
+          otherWinners = [];
+
+          localStorage.setItem(
+            "larsDragonsageOtherWinners",
+            JSON.stringify([])
+          );
+
+
+          console.log(
+            "dragonsage25 hit the ultra-rare."
+          );
+
+          console.log(
+            "New penalty level:",
+            penaltyLevel
+          );
+        }
+
+
+        // --------------------------------------------------------
+        // Somebody OTHER than dragonsage25 hit the ultra-rare
+        // --------------------------------------------------------
+
+        else if (
+          user !== "unknown" &&
+          penaltyLevel > 0
+        ) {
+
+          // Only count each other person once.
+          if (!otherWinners.includes(user)) {
+
+            otherWinners.push(user);
+
+            localStorage.setItem(
+              "larsDragonsageOtherWinners",
+              JSON.stringify(otherWinners)
+            );
+
+            console.log(
+              "Other ultra-rare winner added:",
+              user
+            );
+          }
+
+
+          // ------------------------------------------------------
+          // Have TWO different other people now hit it?
+          // ------------------------------------------------------
+
+          if (
+            otherWinners.length >=
+            OTHER_WINNERS_NEEDED
+          ) {
+
+            // Reset dragonsage25 completely.
+            penaltyLevel = 0;
+            otherWinners = [];
+
+            localStorage.setItem(
+              "larsDragonsagePenalty",
+              "0"
+            );
+
+            localStorage.setItem(
+              "larsDragonsageOtherWinners",
+              JSON.stringify([])
+            );
+
+            console.log(
+              "Two other people have hit the ultra-rare."
+            );
+
+            console.log(
+              "dragonsage25 is back to normal odds."
+            );
+          }
+        }
+      }
+
+
+      // ==========================================================
+      // DEBUG INFORMATION
+      // ==========================================================
+
+      console.log(
+        "User:",
+        user
+      );
+
+      console.log(
+        "Selected image:",
+        img
+      );
+
+      console.log(
+        "Penalty level:",
+        penaltyLevel
+      );
+
+      console.log(
+        "Ultra-rare weight used for this roll:",
+        ultraRareWeight
+      );
+
+      console.log(
+        "Other winners toward reset:",
+        otherWinners
+      );
+
+
+      // ==========================================================
+      // DISPLAY THE IMAGE
+      // ==========================================================
 
       face.style.opacity = 0;
-      face.style.transition = "opacity 1s ease-in-out";
+
+      face.style.transition =
+        "opacity 1s ease-in-out";
+
 
       face.onload = () => {
+
         void face.offsetWidth;
+
         face.style.opacity = 1;
 
         setTimeout(() => {
@@ -90,14 +365,25 @@
         }, 5000);
       };
 
+
       face.onerror = () => {
-        console.error("Failed to load image:", img);
+
+        console.error(
+          "Failed to load image:",
+          img
+        );
       };
 
-      face.src = img + "?cachebust=" + new Date().getTime();
+
+      face.src =
+        img +
+        "?cachebust=" +
+        new Date().getTime();
     }
 
+
     showRandomFace();
+
   });
 </script>
 
